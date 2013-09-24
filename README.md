@@ -1,3 +1,6 @@
+This is a fork of github.com/carloscm/gossie with an option to return nil rows.
+-Adil
+
 # This repo is not maintained anymore
 
 I've moved on from Cassandra, both for professional reasons and because I do not agree with the path the project is taking. For this reason I haven't worked on Gossie for months and I declare this repo unmaintained. I will keep it intact to avoid breaking imports.
