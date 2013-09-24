@@ -2,9 +2,9 @@ package gossie
 
 import (
 	"errors"
-	"github.com/carloscm/gossie/src/cassandra"
+	"github.com/adilhn/gossie/src/cassandra"
 	"github.com/pomack/thrift4go/lib/go/src/thrift"
-	)
+)
 
 /*
 	to do:
@@ -138,7 +138,7 @@ type reader struct {
 	columns          [][]byte
 	setColumns       bool
 	setWhere         bool
-	returnNilRows    bool  // If True return nil-valued rows.
+	returnNilRows    bool // If True return nil-valued rows.
 	expressions      thrift.TList
 }
 
@@ -186,8 +186,8 @@ func (r *reader) Where(column []byte, op Operator, value []byte) Reader {
 }
 
 func (r *reader) ReturnNilRows(retNilRows bool) Reader {
-  r.returnNilRows = retNilRows
-  return r
+	r.returnNilRows = retNilRows
+	return r
 }
 
 func sliceToCassandra(slice *Slice) *cassandra.SliceRange {
