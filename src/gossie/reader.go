@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/carloscm/gossie/src/cassandra"
 	"github.com/pomack/thrift4go/lib/go/src/thrift"
-)
+	)
 
 /*
 	to do:
@@ -124,6 +124,9 @@ type Reader interface {
 	// slice of Row pointers to the gathered rows, which may be empty if none were found. It returns nil only
 	// on error conditions
 	IndexedGet(*IndexedRange) ([]*Row, error)
+
+	// ReturnNilRows can set the option to return rows which are nil for RangeGet or IndexedGet operations.
+	ReturnNilRows(retNilRows bool) Reader
 }
 
 type reader struct {
@@ -135,6 +138,7 @@ type reader struct {
 	columns          [][]byte
 	setColumns       bool
 	setWhere         bool
+	returnNilRows    bool  // If True return nil-valued rows.
 	expressions      thrift.TList
 }
 
@@ -179,6 +183,11 @@ func (r *reader) Where(column []byte, op Operator, value []byte) Reader {
 	r.expressions.Push(exp)
 	r.setWhere = true
 	return r
+}
+
+func (r *reader) ReturnNilRows(retNilRows bool) Reader {
+  r.returnNilRows = retNilRows
+  return r
 }
 
 func sliceToCassandra(slice *Slice) *cassandra.SliceRange {
@@ -403,7 +412,7 @@ func (r *reader) RangeGet(rang *Range) ([]*Row, error) {
 		return nil, err
 	}
 
-	return rowsFromTListKeySlice(ret), nil
+	return rowsFromTListKeySlice(ret, r.returnNilRows), nil
 }
 
 func (r *reader) IndexedGet(rang *IndexedRange) ([]*Row, error) {
@@ -438,7 +447,7 @@ func (r *reader) IndexedGet(rang *IndexedRange) ([]*Row, error) {
 		return nil, err
 	}
 
-	return rowsFromTListKeySlice(ret), nil
+	return rowsFromTListKeySlice(ret, r.returnNilRows), nil
 }
 
 func rowFromTListColumns(key []byte, tl thrift.TList) *Row {
@@ -513,7 +522,7 @@ func rowsColumnCountFromTMap(tm thrift.TMap) []*RowColumnCount {
 	return r
 }
 
-func rowsFromTListKeySlice(tl thrift.TList) []*Row {
+func rowsFromTListKeySlice(tl thrift.TList, returnNilRows bool) []*Row {
 	if tl == nil || tl.Len() <= 0 {
 		return make([]*Row, 0)
 	}
@@ -522,7 +531,7 @@ func rowsFromTListKeySlice(tl thrift.TList) []*Row {
 		keySlice := keySliceI.(*cassandra.KeySlice)
 		key := keySlice.Key
 		row := rowFromTListColumns(key, keySlice.Columns)
-		if row != nil {
+		if returnNilRows || row != nil {
 			r = append(r, row)
 		}
 	}
